@@ -1,0 +1,6 @@
+{
+  "name": "HRI Project Manager",
+  "description": "Premium React & Supabase-based PM core for managing HRI training courses, projects, scheduling, checklists, and R&R.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
