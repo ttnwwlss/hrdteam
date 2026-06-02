@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { X, UserPlus, Trash2, Edit, Save, PlusCircle } from 'lucide-react';
+import { X, UserPlus, Trash2, Edit, PlusCircle } from 'lucide-react';
 import { Member, memberService } from '../services/memberService';
 
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   members: Member[];
-  onRefreshMembers: () => void;
+  onRefreshMembers: () => void | Promise<void>;
 }
 
 export const MemberModal: React.FC<MemberModalProps> = ({
@@ -16,35 +16,40 @@ export const MemberModal: React.FC<MemberModalProps> = ({
   onRefreshMembers
 }) => {
   const [name, setName] = useState('');
-  
-  // Tracking if we are editing an existing member
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!isOpen) return null;
 
+  const canSubmit = name.trim().length > 0 && !isSaving;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+
+    const trimmedName = name.trim();
+    if (!trimmedName || isSaving) return;
 
     try {
+      setIsSaving(true);
+
       if (editingId) {
-        // Update member
         await memberService.updateMember(editingId, {
-          name: name.trim()
+          name: trimmedName
         });
         setEditingId(null);
       } else {
-        // Create new member
         await memberService.createMember({
-          name: name.trim()
+          name: trimmedName
         });
       }
 
-      // Reset
       setName('');
-      onRefreshMembers();
+      await onRefreshMembers();
     } catch (err) {
       console.error('Failed to save member:', err);
+      alert('팀원 저장 중 오류가 발생했습니다. Supabase 테이블 설정 또는 콘솔 오류를 확인해주세요.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -59,12 +64,13 @@ export const MemberModal: React.FC<MemberModalProps> = ({
   };
 
   const handleDeleteMember = async (id: string) => {
-    if (confirm('이 팀원을 목록에서 숨김(비활성화) 처리하시겠습니까? 더이상 드롭다운에서 선택할 수 없게 됩니다.')) {
+    if (confirm('이 팀원을 목록에서 숨김(비활성화) 처리하시겠습니까? 더 이상 드롭다운에서 선택할 수 없게 됩니다.')) {
       try {
         await memberService.deleteMember(id);
-        onRefreshMembers();
+        await onRefreshMembers();
       } catch (err) {
-        console.error(err);
+        console.error('Failed to delete member:', err);
+        alert('팀원 숨김 처리 중 오류가 발생했습니다.');
       }
     }
   };
@@ -75,13 +81,13 @@ export const MemberModal: React.FC<MemberModalProps> = ({
 
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
         <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-slate-100 flex flex-col max-h-[85vh]">
-          
-          {/* Header */}
+
           <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-800">
               HRI 사업단 팀원 등록 및 관리
             </h3>
             <button
+              type="button"
               onClick={onClose}
               className="p-1 hover:bg-slate-200 text-slate-400 hover:text-slate-700 rounded-md transition"
             >
@@ -90,7 +96,6 @@ export const MemberModal: React.FC<MemberModalProps> = ({
           </div>
 
           <div className="p-5 overflow-y-auto space-y-6 text-xs flex-1">
-            {/* Create or Edit Container Form */}
             <form onSubmit={handleSubmit} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3.5">
               <h4 className="font-bold text-slate-800 flex items-center gap-1.5 mb-1 text-[11px]">
                 <UserPlus className="h-4 w-4 text-rose-500" />
@@ -98,9 +103,10 @@ export const MemberModal: React.FC<MemberModalProps> = ({
               </h4>
 
               <div className="grid grid-cols-1 gap-3">
-                {/* Name */}
                 <div className="space-y-1">
-                  <label htmlFor="mem-name-input" className="block text-[10px] font-medium text-slate-500">성명 <span className="text-rose-500">*</span></label>
+                  <label htmlFor="mem-name-input" className="block text-[10px] font-medium text-slate-500">
+                    성명 <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     id="mem-name-input"
                     type="text"
@@ -108,12 +114,11 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="홍길동"
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800"
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300"
                   />
                 </div>
               </div>
 
-              {/* Confirm / Cancel row */}
               <div className="flex items-center justify-end space-x-2 pt-2">
                 {editingId && (
                   <button
@@ -124,17 +129,22 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                     편집 취소
                   </button>
                 )}
+
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-slate-880 hover:bg-slate-900 text-white rounded-lg font-bold flex items-center space-x-1"
+                  disabled={!canSubmit}
+                  className={`px-4 py-1.5 rounded-lg font-bold flex items-center space-x-1 transition ${
+                    canSubmit
+                      ? 'bg-slate-800 hover:bg-slate-900 text-white cursor-pointer'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
                 >
                   <PlusCircle className="h-3.5 w-3.5" />
-                  <span>{editingId ? '저장하기' : '팀원 추가'}</span>
+                  <span>{isSaving ? '저장 중...' : editingId ? '저장하기' : '팀원 추가'}</span>
                 </button>
               </div>
             </form>
 
-            {/* List and Tables of Current Active Staff */}
             <div className="space-y-2">
               <h4 className="font-bold text-slate-700 text-[11px] uppercase tracking-wide">
                 소속 팀원 명단 ({members.length}명)
@@ -153,17 +163,15 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                       <tr key={m.id} className="hover:bg-slate-50 transition">
                         <td className="p-3 font-bold">{m.name}</td>
                         <td className="p-3 text-right space-x-1.5 whitespace-nowrap">
-                          {/* edit member button */}
                           <button
                             type="button"
                             onClick={() => handleStartEdit(m)}
-                            className="p-1 hover:bg-slate-150 text-slate-500 hover:text-slate-800 rounded transition"
+                            className="p-1 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded transition"
                             title="정보수정"
                           >
                             <Edit className="h-3.5 w-3.5" />
                           </button>
 
-                          {/* Delete member button */}
                           <button
                             type="button"
                             onClick={() => handleDeleteMember(m.id)}
@@ -175,6 +183,7 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                         </td>
                       </tr>
                     ))}
+
                     {members.length === 0 && (
                       <tr>
                         <td colSpan={2} className="p-8 text-center text-slate-400 italic">
@@ -188,11 +197,11 @@ export const MemberModal: React.FC<MemberModalProps> = ({
             </div>
           </div>
 
-          {/* Footer Close */}
           <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end">
             <button
+              type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-850 hover:bg-slate-900 border border-slate-200 text-white rounded-lg font-bold"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-900 border border-slate-200 text-white rounded-lg font-bold"
             >
               닫기
             </button>
