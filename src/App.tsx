@@ -421,12 +421,16 @@ export default function App() {
           />
         ) : (
           <>
-            {/* Statistics Dashboard summary */}
-            <DashboardStats 
-              courses={courses.filter(c => c.is_active)}
-              rounds={rounds.filter(r => r.is_active)}
-              members={members}
-            />
+            {(() => {
+              const activeCourseIdsSet = new Set(courses.filter(c => c.is_active).map(c => c.id));
+              return (
+                <DashboardStats 
+                  courses={courses.filter(c => c.is_active)}
+                  rounds={rounds.filter(r => r.is_active && activeCourseIdsSet.has(r.course_id))}
+                  members={members}
+                />
+              );
+            })()}
 
             {/* Dynamic filter panel interface */}
             <FilterPanel 
@@ -668,13 +672,16 @@ export default function App() {
                 />
               )}
 
-              {activeTab === 'rr' && (
-                <RRView 
-                  members={members}
-                  courses={courses.filter(c => c.is_active)}
-                  rounds={rounds.filter(r => r.is_active)}
-                />
-              )}
+              {activeTab === 'rr' && (() => {
+                const activeCourseIdsSet = new Set(courses.filter(c => c.is_active).map(c => c.id));
+                return (
+                  <RRView 
+                    members={members}
+                    courses={courses.filter(c => c.is_active)}
+                    rounds={rounds.filter(r => r.is_active && activeCourseIdsSet.has(r.course_id))}
+                  />
+                );
+              })()}
             </section>
           </>
         )}

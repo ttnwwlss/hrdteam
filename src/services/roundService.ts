@@ -277,7 +277,8 @@ export const roundService = {
         await logService.logAction('round', returnedRound.id, returnedRound.name, 'create', `세부 과정 "${returnedRound.name}" 신규 추가 (세부 차수 번호: ${nextRoundNo})`);
         return returnedRound;
       } catch (err) {
-        console.error('Supabase createRound error, local mode:', err);
+        console.error('Supabase createRound error:', err);
+        throw err;
       }
     }
 
@@ -325,7 +326,8 @@ export const roundService = {
         await logService.logAction('round', id, returnedRound.name, 'update', `세부 과정 수정: ${summary}`);
         return returnedRound;
       } catch (err) {
-        console.error('Supabase updateRound error, local mode:', err);
+        console.error('Supabase updateRound error:', err);
+        throw err;
       }
     }
 

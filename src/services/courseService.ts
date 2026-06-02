@@ -155,7 +155,8 @@ export const courseService = {
         await logService.logAction('project', data.id, data.name, 'create', `신규 프로젝트 "${data.name}"(유형: ${data.type}) 등록 완료`);
         return data as Course;
       } catch (err) {
-        console.error('Supabase createCourse error, using local:', err);
+        console.error('Supabase createCourse error:', err);
+        throw err;
       }
     }
 
@@ -198,7 +199,8 @@ export const courseService = {
         await logService.logAction('project', id, data.name, 'update', `프로젝트 수정: ${summary}`);
         return data as Course;
       } catch (err) {
-        console.error('Supabase updateCourse error, using local:', err);
+        console.error('Supabase updateCourse error:', err);
+        throw err;
       }
     }
 
