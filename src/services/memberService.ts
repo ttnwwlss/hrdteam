@@ -3,22 +3,36 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 export interface Member {
   id: string;
   name: string;
-  role?: string;
-  email?: string;
-  phone?: string;
+  role?: string | null;
+  email?: string | null;
+  phone?: string | null;
   is_active: boolean;
   created_at?: string;
 }
 
 export const DEFAULT_MEMBERS: Member[] = [];
 
+function createLocalId(): string {
+  return typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : 'mem_' + Math.random().toString(36).slice(2, 11);
+}
+
 function getLocalMembers(): Member[] {
   const data = localStorage.getItem('hri_members');
+
   if (!data) {
     localStorage.setItem('hri_members', JSON.stringify([]));
     return [];
   }
-  return JSON.parse(data);
+
+  try {
+    return JSON.parse(data) as Member[];
+  } catch (err) {
+    console.error('Failed to parse local members:', err);
+    localStorage.setItem('hri_members', JSON.stringify([]));
+    return [];
+  }
 }
 
 function saveLocalMembers(members: Member[]) {
@@ -34,16 +48,17 @@ export const memberService = {
           .select('*')
           .eq('is_active', true)
           .order('name', { ascending: true });
-        
+
         if (error) throw error;
+
         return (data || []) as Member[];
       } catch (err) {
         console.error('Supabase getMembers error, falling back to local:', err);
-        return getLocalMembers().filter(m => m.is_active);
+        return getLocalMembers().filter((m) => m.is_active);
       }
-    } else {
-      return getLocalMembers().filter(m => m.is_active);
     }
+
+    return getLocalMembers().filter((m) => m.is_active);
   },
 
   async getAllMembersIncludingHidden(): Promise<Member[]> {
@@ -53,61 +68,92 @@ export const memberService = {
           .from('members')
           .select('*')
           .order('name', { ascending: true });
+
         if (error) throw error;
+
         return (data || []) as Member[];
       } catch (err) {
+        console.error('Supabase getAllMembersIncludingHidden error, falling back to local:', err);
         return getLocalMembers();
       }
-    } else {
-      return getLocalMembers();
     }
+
+    return getLocalMembers();
   },
 
-  async createMember(member: Omit<Member, 'id' | 'is_active'>): Promise<Member> {
-    const newMember: Member = {
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'mem_' + Math.random().toString(36).substr(2, 9),
-      ...member,
-      is_active: true,
-      created_at: new Date().toISOString()
-    };
+  async createMember(member: { name: string }): Promise<Member> {
+    const trimmedName = member.name.trim();
+
+    if (!trimmedName) {
+      throw new Error('Member name is required');
+    }
 
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase
           .from('members')
-          .insert([{
-            name: member.name,
-            role: 'support', // placeholder to satisfy database constraint
-            is_active: true
-          }])
+          .insert([
+            {
+              name: trimmedName,
+              is_active: true
+            }
+          ])
           .select()
           .single();
+
         if (error) throw error;
+
         return data as Member;
       } catch (err) {
         console.error('Supabase createMember error, using local:', err);
       }
     }
 
+    const newMember: Member = {
+      id: createLocalId(),
+      name: trimmedName,
+      role: null,
+      email: null,
+      phone: null,
+      is_active: true,
+      created_at: new Date().toISOString()
+    };
+
     const current = getLocalMembers();
     current.push(newMember);
     saveLocalMembers(current);
+
     return newMember;
   },
 
-  async updateMember(id: string, updates: Partial<Omit<Member, 'id'>>): Promise<Member> {
+  async updateMember(id: string, updates: { name?: string; is_active?: boolean }): Promise<Member> {
+    const sanitizedUpdates: Partial<Member> = {};
+
+    if (typeof updates.name === 'string') {
+      const trimmedName = updates.name.trim();
+
+      if (!trimmedName) {
+        throw new Error('Member name is required');
+      }
+
+      sanitizedUpdates.name = trimmedName;
+    }
+
+    if (typeof updates.is_active === 'boolean') {
+      sanitizedUpdates.is_active = updates.is_active;
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase
           .from('members')
-          .update({
-            name: updates.name,
-            is_active: updates.is_active
-          })
+          .update(sanitizedUpdates)
           .eq('id', id)
           .select()
           .single();
+
         if (error) throw error;
+
         return data as Member;
       } catch (err) {
         console.error('Supabase updateMember error, using local:', err);
@@ -115,15 +161,23 @@ export const memberService = {
     }
 
     const current = getLocalMembers();
-    const idx = current.findIndex(m => m.id === id);
-    if (idx === -1) throw new Error('Member not found');
-    current[idx] = { ...current[idx], ...updates };
+    const idx = current.findIndex((m) => m.id === id);
+
+    if (idx === -1) {
+      throw new Error('Member not found');
+    }
+
+    current[idx] = {
+      ...current[idx],
+      ...sanitizedUpdates
+    };
+
     saveLocalMembers(current);
+
     return current[idx];
   },
 
   async deleteMember(id: string): Promise<void> {
-    // Soft delete: sets is_active to false
     await this.updateMember(id, { is_active: false });
   }
 };
