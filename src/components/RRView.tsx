@@ -90,12 +90,6 @@ export const RRView: React.FC<RRViewProps> = ({ members, courses, rounds }) => {
                     <p className="text-[10px] text-slate-400 font-mono tracking-tight font-semibold mt-0.5">{member.email || '이메일 없음'}</p>
                   </div>
                 </div>
-                <span className="text-[10px] uppercase font-bold px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-150 rounded-xl shadow-4xs">
-                  {member.role === 'sales' ? '사업PM' :
-                   member.role === 'pm' ? '운영PM' :
-                   member.role === 'pl' ? '운영PL' :
-                   member.role === 'support' ? '운영보조' : '운영보조'}
-                </span>
               </div>
 
               {/* R&R Tasks list */}

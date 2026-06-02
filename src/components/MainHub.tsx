@@ -100,9 +100,9 @@ export const MainHub: React.FC<MainHubProps> = ({
   // Selected manual item to view in-page
   const [selectedViewingManual, setSelectedViewingManual] = useState<string | null>(null);
 
-  // Active lists calculations
   const activeCourses = courses.filter(c => c.is_active);
-  const activeRounds = rounds.filter(r => r.is_active);
+  const activeCourseIdsSet = new Set(activeCourses.map(c => c.id));
+  const activeRounds = rounds.filter(r => r.is_active && activeCourseIdsSet.has(r.course_id));
   
   const currentRunningRounds = activeRounds.filter(r => ['준비중', '운영중'].includes(r.status));
   const completedRounds = activeRounds.filter(r => r.status === '완료');
