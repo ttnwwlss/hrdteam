@@ -147,12 +147,6 @@ export const MainHub: React.FC<MainHubProps> = ({
   };
 
   const getMultiSupportNames = (round: any) => {
-    if (round.operator_support_ids && Array.isArray(round.operator_support_ids) && round.operator_support_ids.length > 0) {
-      return round.operator_support_ids
-        .map((id: string) => getMemberName(id))
-        .filter(Boolean)
-        .join(', ');
-    }
     const names = [];
     if (round.operator_support_id) names.push(getMemberName(round.operator_support_id));
     if (round.operator_field_id) names.push(getMemberName(round.operator_field_id));
@@ -578,7 +572,7 @@ export const MainHub: React.FC<MainHubProps> = ({
           <div className="mt-8 pt-4 border-t border-white/10 text-center">
             <button 
               onClick={() => onNavigateToTab('rr')}
-              className="w-full py-2 bg-white hover:bg-slate-150 text-slate-950 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
+              className="w-full py-2 bg-white hover:bg-slate-100 text-slate-950 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
             >
               <span>팀원 및 배정인력 R&R 상황부 가기</span>
               <ArrowRight className="h-4 w-4" />

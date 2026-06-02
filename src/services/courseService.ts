@@ -238,5 +238,40 @@ export const courseService = {
     
     await this.updateCourse(id, { is_active: true });
     await logService.logAction('project', id, name, 'restore', `숨김 처리된 프로젝트를 복원하였습니다.`);
+  },
+
+  async permanentDeleteCourse(id: string): Promise<void> {
+    const c = await this.getCourseById(id);
+    const name = c ? c.name : '알 수 없는 프로젝트';
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase
+          .from('courses')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+      } catch (err) {
+        console.error('Supabase permanentDeleteCourse error:', err);
+      }
+    }
+
+    const current = getLocalCourses();
+    const filtered = current.filter(course => course.id !== id);
+    saveLocalCourses(filtered);
+
+    // Also delete local rounds under this course to simulate ON DELETE CASCADE
+    const localRounds = localStorage.getItem('hri_rounds');
+    if (localRounds) {
+      try {
+        const parsedRounds = JSON.parse(localRounds);
+        const filteredRounds = parsedRounds.filter((r: any) => r.course_id !== id);
+        localStorage.setItem('hri_rounds', JSON.stringify(filteredRounds));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    await logService.logAction('project', id, name, 'delete', `프로젝트를 영구 삭제하였습니다. (세부 차수 포함)`);
   }
 };

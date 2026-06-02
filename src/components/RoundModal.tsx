@@ -68,7 +68,8 @@ export const RoundModal: React.FC<RoundModalProps> = ({
   const [status, setStatus] = useState<Round['status']>('준비중');
   const [region, setRegion] = useState('서울');
   const [locationDetail, setLocationDetail] = useState('');
-  const [operatorSupportIds, setOperatorSupportIds] = useState<string[]>([]);
+  const [operatorSupportId, setOperatorSupportId] = useState('');
+  const [operatorFieldId, setOperatorFieldId] = useState('');
   const [memo, setMemo] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -106,16 +107,8 @@ export const RoundModal: React.FC<RoundModalProps> = ({
       setRegion(detectedRegion);
       setLocationDetail(detail);
 
-      let initialAssistantIds: string[] = [];
-      if (round.operator_support_ids && Array.isArray(round.operator_support_ids)) {
-        initialAssistantIds = [...round.operator_support_ids];
-      } else {
-        if (round.operator_support_id) initialAssistantIds.push(round.operator_support_id);
-        if (round.operator_field_id && !initialAssistantIds.includes(round.operator_field_id)) {
-          initialAssistantIds.push(round.operator_field_id);
-        }
-      }
-      setOperatorSupportIds(initialAssistantIds);
+      setOperatorSupportId(round.operator_support_id || '');
+      setOperatorFieldId(round.operator_field_id || '');
       setMemo(round.memo || '');
       setStartDate(round.start_date || '');
       setEndDate(round.end_date || '');
@@ -131,7 +124,8 @@ export const RoundModal: React.FC<RoundModalProps> = ({
       setStatus('준비중');
       setRegion('서울');
       setLocationDetail('');
-      setOperatorSupportIds([]);
+      setOperatorSupportId('');
+      setOperatorFieldId('');
       setMemo('');
       setStartDate('');
       setEndDate('');
@@ -198,9 +192,8 @@ export const RoundModal: React.FC<RoundModalProps> = ({
       name: name.trim(),
       status,
       location: combinedLocation,
-      operator_support_id: operatorSupportIds[0] || null,
-      operator_field_id: operatorSupportIds[1] || null,
-      operator_support_ids: operatorSupportIds,
+      operator_support_id: operatorSupportId || null,
+      operator_field_id: operatorFieldId || null,
       memo: memo.trim() || null,
       start_date: startDate || null,
       end_date: endDate || null,
@@ -209,17 +202,6 @@ export const RoundModal: React.FC<RoundModalProps> = ({
       satisfaction,
       completed_at: completedAt || null
     });
-  };
-
-  const getRoleLabel = (r: string) => {
-    switch (r) {
-      case 'sales': return '사업PM';
-      case 'pm': return '운영PM';
-      case 'pl': return '운영PL';
-      case 'support': return '운영보조';
-      case 'field': return '운영보조';
-      default: return r;
-    }
   };
 
   return (
@@ -338,41 +320,39 @@ export const RoundModal: React.FC<RoundModalProps> = ({
               </div>
             </div>
 
-            {/* Staffing Allocation (Multi-Select Support operators) */}
-            <div className="space-y-1.5 bg-slate-50/70 p-3 rounded-xl border border-slate-200/85 text-xs">
-              <label className="block text-[11px] font-bold text-slate-500">운영보조 팀원 배치 (다중 선택)</label>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {members.filter(m => m.role === 'support' || m.role === 'field' || m.role === 'pm' || m.role === 'pl' || m.role === 'sales').map(m => {
-                  const isSelected = operatorSupportIds.includes(m.id);
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => {
-                        if (isSelected) {
-                          setOperatorSupportIds(prev => prev.filter(id => id !== m.id));
-                        } else {
-                          setOperatorSupportIds(prev => [...prev, m.id]);
-                        }
-                      }}
-                      className={`px-3 py-1.5 rounded-lg border text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer ${
-                        isSelected
-                          ? 'bg-rose-600 border-rose-700 text-white shadow-xs'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
-                    >
-                      <span>{m.name}</span>
-                      <span className={`text-[9px] font-medium ${isSelected ? 'text-rose-100' : 'text-slate-500'}`}>
-                        ({getRoleLabel(m.role)})
-                      </span>
-                      {isSelected && <span className="ml-1 text-[10px]">✓</span>}
-                    </button>
-                  );
-                })}
+            {/* Staffing Allocation (운영지원 & 현장실무) */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              {/* Operator Support */}
+              <div className="space-y-1">
+                <label htmlFor="round-operator-support" className="block text-[10px] font-bold text-slate-500">운영지원</label>
+                <select
+                  id="round-operator-support"
+                  value={operatorSupportId}
+                  onChange={(e) => setOperatorSupportId(e.target.value)}
+                  className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-bold"
+                >
+                  <option value="">미정 (선택)</option>
+                  {members.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
               </div>
-              {operatorSupportIds.length === 0 && (
-                <p className="text-[10px] text-slate-400 italic">배정된 운영보조원이 없습니다. 클릭하여 다중 설정해 주세요.</p>
-              )}
+
+              {/* Operator Field */}
+              <div className="space-y-1">
+                <label htmlFor="round-operator-field" className="block text-[10px] font-bold text-slate-500">현장실무</label>
+                <select
+                  id="round-operator-field"
+                  value={operatorFieldId}
+                  onChange={(e) => setOperatorFieldId(e.target.value)}
+                  className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-bold"
+                >
+                  <option value="">미정 (선택)</option>
+                  {members.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Schedule Dates */}
@@ -530,7 +510,7 @@ export const RoundModal: React.FC<RoundModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-150 rounded-lg font-medium transition cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition cursor-pointer"
                 >
                   취소
                 </button>

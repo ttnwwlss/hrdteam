@@ -74,12 +74,6 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
   };
 
   const getMultiSupportNames = (round: any) => {
-    if (round.operator_support_ids && Array.isArray(round.operator_support_ids) && round.operator_support_ids.length > 0) {
-      return round.operator_support_ids
-        .map((id: string) => getMemberName(id))
-        .filter(n => n)
-        .join(', ');
-    }
     const names = [];
     if (round.operator_support_id) names.push(getMemberName(round.operator_support_id));
     if (round.operator_field_id) names.push(getMemberName(round.operator_field_id));

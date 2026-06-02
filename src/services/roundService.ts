@@ -274,7 +274,7 @@ export const roundService = {
           ...data,
           operator_support_ids: [data.operator_support_id, data.operator_field_id].filter(Boolean)
         } as Round;
-        await logService.logAction('round', returnedRound.id, returnedRound.name, 'create', `세부 과정 "${returnedRound.name}" 신규 추가 (라운드 번호: ${nextRoundNo})`);
+        await logService.logAction('round', returnedRound.id, returnedRound.name, 'create', `세부 과정 "${returnedRound.name}" 신규 추가 (세부 차수 번호: ${nextRoundNo})`);
         return returnedRound;
       } catch (err) {
         console.error('Supabase createRound error, local mode:', err);
@@ -285,7 +285,7 @@ export const roundService = {
     current.push(newRound);
     saveLocalRounds(current);
 
-    await logService.logAction('round', newRound.id, newRound.name, 'create', `세부 과정 "${newRound.name}" 신규 추가 (라운드 번호: ${nextRoundNo})`);
+    await logService.logAction('round', newRound.id, newRound.name, 'create', `세부 과정 "${newRound.name}" 신규 추가 (세부 차수 번호: ${nextRoundNo})`);
     return newRound;
   },
 

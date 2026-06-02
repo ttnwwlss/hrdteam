@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, onOpenMembers, 
             </div>
             <div>
               <h1 className="text-sm font-bold tracking-tight text-slate-800 flex items-center gap-1.5">
-                HRI Project Manager
+                HRD사업팀 운영관리
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">
                   PRO
                 </span>

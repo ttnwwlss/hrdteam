@@ -72,12 +72,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   };
 
   const getMultiSupportNames = (round: any) => {
-    if (round.operator_support_ids && Array.isArray(round.operator_support_ids) && round.operator_support_ids.length > 0) {
-      return round.operator_support_ids
-        .map((id: string) => getMemberName(id))
-        .filter(n => n && n !== '미배정')
-        .join(', ');
-    }
     const names = [];
     if (round.operator_support_id) names.push(getMemberName(round.operator_support_id));
     if (round.operator_field_id) names.push(getMemberName(round.operator_field_id));
@@ -517,7 +511,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
                 {/* Date Ranges & Progress bar */}
                 <div className="md:text-right shrink-0 flex flex-col md:items-end justify-center">
-                  <div className="text-xs font-extrabold text-slate-850 bg-slate-100 px-3 py-1.5 rounded-xl font-mono tracking-tight whitespace-nowrap border border-slate-200">
+                  <div className="text-xs font-extrabold text-slate-800 bg-slate-100 px-3 py-1.5 rounded-xl font-mono tracking-tight whitespace-nowrap border border-slate-200">
                     {formatDateRange(round.start_date, round.end_date)}
                   </div>
                   <div className="w-full md:w-36 mt-3">

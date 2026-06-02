@@ -56,7 +56,6 @@ export const RRView: React.FC<RRViewProps> = ({ members, courses, rounds }) => {
  
           // 2. Detailed Rounds assigned to this user
           const assignedRounds = rounds.filter(r =>
-            (r.operator_support_ids && Array.isArray(r.operator_support_ids) && r.operator_support_ids.includes(member.id)) ||
             r.operator_support_id === member.id ||
             r.operator_field_id === member.id
           );
@@ -64,11 +63,9 @@ export const RRView: React.FC<RRViewProps> = ({ members, courses, rounds }) => {
           // Get role definition labels on each round for this user
           const getRoundRoleLabel = (r: Round) => {
             const roles: string[] = [];
-            const isSupport = (r.operator_support_ids && Array.isArray(r.operator_support_ids) && r.operator_support_ids.includes(member.id)) ||
-                              r.operator_support_id === member.id ||
-                              r.operator_field_id === member.id;
-            if (isSupport) roles.push('운영보조');
-            return roles.join(' + ') || '운영보조';
+            if (r.operator_support_id === member.id) roles.push('운영지원');
+            if (r.operator_field_id === member.id) roles.push('현장실무');
+            return roles.join(' + ') || '지정 없음';
           };
  
           // Split rounds into active (ongoing) vs completed (history)
@@ -181,7 +178,7 @@ export const RRView: React.FC<RRViewProps> = ({ members, courses, rounds }) => {
                         </div>
                       ) : (
                         completedRounds.map(r => (
-                          <div key={r.id} className="p-2.5 rounded-xl bg-emerald-50/20 border border-emerald-100/30 text-[11px] font-bold text-slate-850 flex flex-col">
+                          <div key={r.id} className="p-2.5 rounded-xl bg-emerald-50/20 border border-emerald-100/30 text-[11px] font-bold text-slate-800 flex flex-col">
                             <div className="flex items-center justify-between">
                               <span className="truncate max-w-[70%]" title={r.name}>{r.name}</span>
                               <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 rounded">만족도: {r.satisfaction ? `${r.satisfaction}점` : '미입력'}</span>

@@ -153,8 +153,7 @@ export default function App() {
         .map(c => c.id)
         .includes(r.course_id);
       
-      const isRoundStaff = (r.operator_support_ids && Array.isArray(r.operator_support_ids) && r.operator_support_ids.includes(filters.managerId)) ||
-                           r.operator_support_id === filters.managerId ||
+      const isRoundStaff = r.operator_support_id === filters.managerId ||
                            r.operator_field_id === filters.managerId;
       if (!belongsToCourseWithManager && !isRoundStaff) return false;
     }
@@ -234,6 +233,17 @@ export default function App() {
       await loadData();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handlePermanentDeleteCourse = async (id: string) => {
+    if (confirm('이 프로젝트를 완전히 영구 삭제하시겠습니까?\n경고: 이 프로젝트와 관련된 모든 세부 차수도 Supabase 및 로컬 저장소에서 함께 영구 삭제됩니다.')) {
+      try {
+        await courseService.permanentDeleteCourse(id);
+        await loadData();
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
@@ -507,7 +517,7 @@ export default function App() {
                     {/* Master Projects management controller list */}
                     <div className="bg-white border border-slate-200 rounded-[20px] shadow-2xs p-5" id="project-directories">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-4 border-b border-slate-100 pb-3">
-                        <h3 className="text-xs font-bold text-slate-850 flex flex-wrap items-center gap-1.5 leading-relaxed">
+                        <h3 className="text-xs font-bold text-slate-800 flex flex-wrap items-center gap-1.5 leading-relaxed">
                           <BookOpen className="h-4 w-4 text-blue-600 shrink-0" />
                           <span>개설 프로젝트 마스터 레벨 목록 ({filteredCourses.length}개 과정)</span>
                           {selectedCourseId && (
@@ -572,12 +582,20 @@ export default function App() {
                                 
                                 <div className="flex items-center space-x-1 shrink-0">
                                   {!c.is_active ? (
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); handleRestoreCourse(c.id); }}
-                                      className="px-2 py-0.5 bg-slate-700 text-white rounded text-[9px] font-semibold hover:bg-slate-800 transition cursor-pointer"
-                                    >
-                                      숨김 해제 복원
-                                    </button>
+                                    <div className="flex items-center space-x-1">
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); handleRestoreCourse(c.id); }}
+                                        className="px-2 py-0.5 bg-slate-700 text-white rounded text-[9px] font-semibold hover:bg-slate-800 transition cursor-pointer"
+                                      >
+                                        숨김 해제 복원
+                                      </button>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); handlePermanentDeleteCourse(c.id); }}
+                                        className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-[9px] font-semibold transition cursor-pointer"
+                                      >
+                                        영구 삭제
+                                      </button>
+                                    </div>
                                   ) : (
                                     <>
                                       <button
@@ -612,7 +630,7 @@ export default function App() {
                         <div className="flex justify-center mt-4 pt-3 border-t border-slate-100">
                           <button
                             onClick={() => setIsCoursesExpanded(!isCoursesExpanded)}
-                            className="px-4 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-250 hover:border-slate-350 rounded-xl text-[10px] font-extrabold text-slate-600 hover:text-slate-850 transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                            className="px-4 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-250 hover:border-slate-350 rounded-xl text-[10px] font-extrabold text-slate-600 hover:text-slate-800 transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
                           >
                             {isCoursesExpanded ? (
                               <span>▲ 목록 접기</span>
