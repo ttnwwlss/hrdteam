@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X, UserPlus, Trash2, Edit, Save, PlusCircle } from 'lucide-react';
 import { Member, memberService } from '../services/memberService';
-import { MEMBER_ROLES } from '../utils/constants';
 
 interface MemberModalProps {
   isOpen: boolean;
@@ -17,9 +16,6 @@ export const MemberModal: React.FC<MemberModalProps> = ({
   onRefreshMembers
 }) => {
   const [name, setName] = useState('');
-  const [role] = useState<'sales' | 'pm' | 'pl' | 'support' | 'field'>('support');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   
   // Tracking if we are editing an existing member
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -34,26 +30,18 @@ export const MemberModal: React.FC<MemberModalProps> = ({
       if (editingId) {
         // Update member
         await memberService.updateMember(editingId, {
-          name: name.trim(),
-          role,
-          email: email.trim() || undefined,
-          phone: phone.trim() || undefined
+          name: name.trim()
         });
         setEditingId(null);
       } else {
         // Create new member
         await memberService.createMember({
-          name: name.trim(),
-          role,
-          email: email.trim() || undefined,
-          phone: phone.trim() || undefined
+          name: name.trim()
         });
       }
 
       // Reset
       setName('');
-      setEmail('');
-      setPhone('');
       onRefreshMembers();
     } catch (err) {
       console.error('Failed to save member:', err);
@@ -63,15 +51,11 @@ export const MemberModal: React.FC<MemberModalProps> = ({
   const handleStartEdit = (m: Member) => {
     setEditingId(m.id);
     setName(m.name);
-    setEmail(m.email || '');
-    setPhone(m.phone || '');
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
     setName('');
-    setEmail('');
-    setPhone('');
   };
 
   const handleDeleteMember = async (id: string) => {
@@ -113,7 +97,7 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                 <span>{editingId ? '팀원 정보 수정' : '새로운 팀원 추가'}</span>
               </h4>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 {/* Name */}
                 <div className="space-y-1">
                   <label htmlFor="mem-name-input" className="block text-[10px] font-medium text-slate-500">성명 <span className="text-rose-500">*</span></label>
@@ -124,32 +108,6 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="홍길동"
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800"
-                  />
-                </div>
-
-                {/* Email */}
-                <div className="space-y-1">
-                  <label htmlFor="mem-email-input" className="block text-[10px] font-medium text-slate-500">회사 이메일</label>
-                  <input
-                    id="mem-email-input"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="kildong@hri.co.kr"
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800"
-                  />
-                </div>
-
-                {/* Phone */}
-                <div className="space-y-1">
-                  <label htmlFor="mem-phone-input" className="block text-[10px] font-medium text-slate-500">연락처 (-포함)</label>
-                  <input
-                    id="mem-phone-input"
-                    type="text"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="010-1234-5678"
                     className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800"
                   />
                 </div>
@@ -187,8 +145,6 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                   <thead className="bg-slate-100 text-slate-500 border-b border-slate-200 font-bold">
                     <tr>
                       <th className="p-3">성명</th>
-                      <th className="p-3">회사 이메일</th>
-                      <th className="p-3">휴대번호</th>
                       <th className="p-3 text-right">관리</th>
                     </tr>
                   </thead>
@@ -196,8 +152,6 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                     {members.map((m) => (
                       <tr key={m.id} className="hover:bg-slate-50 transition">
                         <td className="p-3 font-bold">{m.name}</td>
-                        <td className="p-3 font-mono text-slate-500">{m.email || '-'}</td>
-                        <td className="p-3 font-mono text-slate-500">{m.phone || '-'}</td>
                         <td className="p-3 text-right space-x-1.5 whitespace-nowrap">
                           {/* edit member button */}
                           <button
@@ -223,7 +177,7 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                     ))}
                     {members.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="p-8 text-center text-slate-400 italic">
+                        <td colSpan={2} className="p-8 text-center text-slate-400 italic">
                           현재 등록된 팀원이 없습니다.
                         </td>
                       </tr>

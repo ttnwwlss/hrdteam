@@ -155,8 +155,8 @@ const DEFAULT_ROUNDS: Round[] = [
 function getLocalRounds(): Round[] {
   const data = localStorage.getItem('hri_rounds');
   if (!data) {
-    localStorage.setItem('hri_rounds', JSON.stringify(DEFAULT_ROUNDS));
-    return DEFAULT_ROUNDS;
+    localStorage.setItem('hri_rounds', JSON.stringify([]));
+    return [];
   }
   return JSON.parse(data);
 }
@@ -177,49 +177,7 @@ export const roundService = {
         
         if (error) throw error;
         if (!data || data.length === 0) {
-          // Put seeds
-          const dbMembers = await memberService.getMembers();
-          const dbCourses = await courseService.getCourses();
-
-          const findDbMemberId = (mockId?: string) => {
-            if (!mockId) return null;
-            const mockMem = DEFAULT_MEMBERS.find(m => m.id === mockId);
-            if (!mockMem) return null;
-            const dbMem = dbMembers.find(m => m.email === mockMem.email || m.name === mockMem.name);
-            return dbMem ? dbMem.id : null;
-          };
-
-          const findDbCourseId = (mockId: string) => {
-            const mockCourse = DEFAULT_COURSES.find(c => c.id === mockId);
-            if (!mockCourse) return null;
-            const dbCourse = dbCourses.find(c => c.name === mockCourse.name);
-            return dbCourse ? dbCourse.id : null;
-          };
-
-          const mappedRounds = DEFAULT_ROUNDS.map(({ id, ...rest }) => {
-            return {
-              ...rest,
-              course_id: findDbCourseId(rest.course_id),
-              operator_support_id: findDbMemberId(rest.operator_support_id) || null,
-              operator_field_id: findDbMemberId(rest.operator_field_id) || null,
-            };
-          }).filter(r => r.course_id); // Ensure course_id is not null
-
-          mappedRounds.forEach((r: any) => {
-            delete r.operator_support_ids;
-          });
-
-          const { data: inserted, error: insErr } = await supabase
-            .from('rounds')
-            .insert(mappedRounds)
-            .select();
-          if (!insErr && inserted) {
-            return (inserted as any[]).map(r => ({
-              ...r,
-              operator_support_ids: [r.operator_support_id, r.operator_field_id].filter(Boolean)
-            })) as Round[];
-          }
-          return DEFAULT_ROUNDS;
+          return [];
         }
         return (data as any[]).map(r => ({
           ...r,

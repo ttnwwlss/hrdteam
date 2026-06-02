@@ -155,7 +155,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
             <div className="grid grid-cols-3 gap-3 pt-1">
               {/* Sales Manager */}
               <div className="space-y-1">
-                <label htmlFor="course-sales-manager" className="block text-[10px] font-bold text-slate-500">사업PM</label>
+                <label htmlFor="course-sales-manager" className="block text-[10px] font-bold text-slate-500">사업담당자</label>
                 <select
                   id="course-sales-manager"
                   value={managerSalesId}
@@ -164,7 +164,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                 >
                   <option value="">미정 (선택)</option>
                   {salesMembers.map(m => (
-                    <option key={m.id} value={m.id}>{m.name} ({getRoleLabel(m.role)})</option>
+                    <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
               </div>
@@ -180,7 +180,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                 >
                   <option value="">미정 (선택)</option>
                   {pmMembers.map(m => (
-                    <option key={m.id} value={m.id}>{m.name} ({getRoleLabel(m.role)})</option>
+                    <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
               </div>
@@ -196,7 +196,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                 >
                   <option value="">미정 (선택)</option>
                   {plMembers.map(m => (
-                    <option key={m.id} value={m.id}>{m.name} ({getRoleLabel(m.role)})</option>
+                    <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
               </div>

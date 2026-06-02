@@ -3,26 +3,20 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 export interface Member {
   id: string;
   name: string;
-  role: 'sales' | 'pm' | 'pl' | 'support' | 'field';
+  role?: string;
   email?: string;
   phone?: string;
   is_active: boolean;
   created_at?: string;
 }
 
-export const DEFAULT_MEMBERS: Member[] = [
-  { id: 'm1', name: '송유진 팀장', role: 'sales', email: 'sales1@hri.co.kr', phone: '010-1234-5678', is_active: true },
-  { id: 'm2', name: '박형준 팀장', role: 'pm', email: 'pm1@hri.co.kr', phone: '010-2345-6789', is_active: true },
-  { id: 'm3', name: '김지영 팀원', role: 'pl', email: 'pl1@hri.co.kr', phone: '010-3456-7890', is_active: true },
-  { id: 'm4', name: '이서연 팀원', role: 'support', email: 'support1@hri.co.kr', phone: '010-4567-8901', is_active: true },
-  { id: 'm5', name: '최동현 팀원', role: 'field', email: 'field1@hri.co.kr', phone: '010-5678-9012', is_active: true }
-];
+export const DEFAULT_MEMBERS: Member[] = [];
 
 function getLocalMembers(): Member[] {
   const data = localStorage.getItem('hri_members');
   if (!data) {
-    localStorage.setItem('hri_members', JSON.stringify(DEFAULT_MEMBERS));
-    return DEFAULT_MEMBERS;
+    localStorage.setItem('hri_members', JSON.stringify([]));
+    return [];
   }
   return JSON.parse(data);
 }
@@ -42,17 +36,7 @@ export const memberService = {
           .order('name', { ascending: true });
         
         if (error) throw error;
-        // If empty, let's load default members to avoid sterile system
-        if (!data || data.length === 0) {
-          // Attempt insert default seed
-          const { data: inserted, error: insErr } = await supabase
-            .from('members')
-            .insert(DEFAULT_MEMBERS.map(({ id, ...rest }) => rest))
-            .select();
-          if (!insErr && inserted) return inserted as Member[];
-          return DEFAULT_MEMBERS;
-        }
-        return data as Member[];
+        return (data || []) as Member[];
       } catch (err) {
         console.error('Supabase getMembers error, falling back to local:', err);
         return getLocalMembers().filter(m => m.is_active);
@@ -70,7 +54,7 @@ export const memberService = {
           .select('*')
           .order('name', { ascending: true });
         if (error) throw error;
-        return data as Member[];
+        return (data || []) as Member[];
       } catch (err) {
         return getLocalMembers();
       }
@@ -93,9 +77,7 @@ export const memberService = {
           .from('members')
           .insert([{
             name: member.name,
-            role: member.role,
-            email: member.email,
-            phone: member.phone,
+            role: 'support', // placeholder to satisfy database constraint
             is_active: true
           }])
           .select()
@@ -118,7 +100,10 @@ export const memberService = {
       try {
         const { data, error } = await supabase
           .from('members')
-          .update(updates)
+          .update({
+            name: updates.name,
+            is_active: updates.is_active
+          })
           .eq('id', id)
           .select()
           .single();

@@ -65,8 +65,8 @@ export const DEFAULT_COURSES: Course[] = [
 function getLocalCourses(): Course[] {
   const data = localStorage.getItem('hri_courses');
   if (!data) {
-    localStorage.setItem('hri_courses', JSON.stringify(DEFAULT_COURSES));
-    return DEFAULT_COURSES;
+    localStorage.setItem('hri_courses', JSON.stringify([]));
+    return [];
   }
   return JSON.parse(data);
 }
@@ -87,30 +87,7 @@ export const courseService = {
         
         if (error) throw error;
         if (!data || data.length === 0) {
-          // Put standard database-level mock data
-          const dbMembers = await memberService.getMembers();
-          
-          const findDbMemberId = (mockId?: string) => {
-            if (!mockId) return null;
-            const mockMem = DEFAULT_MEMBERS.find(m => m.id === mockId);
-            if (!mockMem) return null;
-            const dbMem = dbMembers.find(m => m.email === mockMem.email || m.name === mockMem.name);
-            return dbMem ? dbMem.id : null;
-          };
-
-          const mappedCourses = DEFAULT_COURSES.map(({ id, ...rest }) => ({
-            ...rest,
-            manager_sales_id: findDbMemberId(rest.manager_sales_id) || null,
-            manager_pm_id: findDbMemberId(rest.manager_pm_id) || null,
-            manager_pl_id: findDbMemberId(rest.manager_pl_id) || null,
-          }));
-
-          const { data: inserted, error: insErr } = await supabase
-            .from('courses')
-            .insert(mappedCourses)
-            .select();
-          if (!insErr && inserted) return inserted as Course[];
-          return DEFAULT_COURSES;
+          return [];
         }
         return data as Course[];
       } catch (err) {
