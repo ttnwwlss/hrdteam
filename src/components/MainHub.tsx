@@ -111,7 +111,7 @@ export const MainHub: React.FC<MainHubProps> = ({
   const completedWithRating = completedRounds.filter(r => r.satisfaction > 0);
   const avgSatisfaction = completedWithRating.length > 0
     ? completedWithRating.reduce((sum, r) => sum + r.satisfaction, 0) / completedWithRating.length
-    : 4.88;
+    : 0;
 
   // Search filtered courses
   const filteredCoursesInHub = activeCourses.filter(c => 

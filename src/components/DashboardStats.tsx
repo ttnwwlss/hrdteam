@@ -33,7 +33,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ courses, rounds,
   const completedRoundsWithRating = rounds.filter(r => r.status === '완료' && r.satisfaction > 0);
   const averageSatisfaction = completedRoundsWithRating.length > 0
     ? completedRoundsWithRating.reduce((sum, r) => sum + r.satisfaction, 0) / completedRoundsWithRating.length
-    : 4.8; // default positive base rating fallback
+    : 0;
 
   // 6. Workload score
   const operatingStaff = members.filter(m => m.role !== 'sales');
